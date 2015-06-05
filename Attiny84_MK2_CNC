@@ -1,0 +1,66 @@
+/*
+  Read frequency of MK2 CNC controller 
+  MAX freq. 1500 Hz 
+  MIN pulse expected from MK2 will be 0.000666 sec
+  TIMER1 (16 bit) well be used with Input Capture Unit to capture pulse length
+  At 8 Mhz clock 1024 prescaler will be used to receive MIN TICK of 0.000128 sec
+  MAX TICK length 0.000128*65536 sec
+ */ 
+
+
+#include <avr/io.h>
+#include <interrupt.h>
+
+//TODO: volatile variable for timer interrupt routine
+
+volatile unit16_t Now_captured = 0 , Last_captured = 0;
+volatile unit16_t Freq = 0;
+
+void TIMER1_ini(void)
+{
+	TCCR1B |= ((1<<CS12)|(1<<CS10))        // Clock Prescale to 1024. MIN. count at 8Mhz worth 0.000128 sec
+	TCCR1B |= ((1<<ICNC1) | (1<<ICES1));   // Activate the Input Capture Noise Canceler, and rising edge triggering
+	TIMSK = (1<<ICIE1);   // Enable Input Capture Interrupt
+}
+void TIMER0_ini(void)
+{
+	
+}
+
+
+	/* TODO: ICP (input capture pin) at PA7 pin
+			Initialize UART : Baud,Port
+	*/
+	
+	
+	
+	ISR(TIM1_CAPT_vect)
+	{
+		Now_captured = ICR1;            //rising signal detected save its value to variable and deduct previous capture
+		Freq = Now_captured - Last_captured;
+		
+
+	
+	}
+	
+	ISR(TIM1_OVF_vect)
+	{
+		// add one to overflow variable 
+	}
+	
+	sei(); // Enable global interrupts
+
+int main(void)
+{
+	last_captured = 0;
+	TIMER1_ini();
+	
+    while(1)
+    {
+		//TODO:	First Action is to read frequency and convert it to PWM value 
+		//      Frequency changes in discrete values of 15 Hz in range 0-1500 Hz
+		//      Converting to Mini Mill range of RPM 50 - 2500 - each step equals to 24.5 RPM change using  8 bit TIMER.
+		//      
+    }
+	
+}
