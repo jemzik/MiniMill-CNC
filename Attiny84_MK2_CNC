@@ -13,50 +13,67 @@
 
 //TODO: volatile variable for timer interrupt routine
 
-volatile unit16_t Now_captured = 0 , Last_captured = 0;
-volatile unit16_t Freq = 0;
+volatile unit16_t Now_captured = 0;
+volatile float Freq = 0;
+volatile unit8_t PWM_out;
 
-void TIMER1_ini(void)
-{
-	TCCR1B |= ((1<<CS12)|(1<<CS10))        // Clock Prescale to 1024. MIN. count at 8Mhz worth 0.000128 sec
-	TCCR1B |= ((1<<ICNC1) | (1<<ICES1));   // Activate the Input Capture Noise Canceler, and rising edge triggering
-	TIMSK = (1<<ICIE1);   // Enable Input Capture Interrupt
-}
-void TIMER0_ini(void)
-{
+	void TIMER1_ini(void)
+	{
+		// Clock prescale to 1024. MIN. count at 8Mhz worth 0.000128 sec
+		TCCR1B |= ((1<<CS12)|(1<<CS10));
+		// Activate the Input Capture Noise Canceler, and rising edge triggering        
+		TCCR1B |= ((1<<ICNC1) | (1<<ICES1));
+		// Enable Input Capture Interrupt   
+		TIMSK = (1<<ICIE1);   
+		TCNT1 = 0;
+	}
 	
-}
+	void TIMER0_ini(void)
+	{
+		// PWM configuration to output to Mini mill 
+	}
 
-
-	/* TODO: ICP (input capture pin) at PA7 pin
-			Initialize UART : Baud,Port
-	*/
-	
-	
-	
+// Input Pulse Interrupt on Rising edge using 16bit Timer 1	
 	ISR(TIM1_CAPT_vect)
 	{
-		Now_captured = ICR1;            //rising signal detected save its value to variable and deduct previous capture
-		Freq = Now_captured - Last_captured;
-		
-
-	
+		//rising signal detected save its value to variable and deduct previous capture
+		Now_captured = ICR1;
+		//frequency of input signal equals to prescaled timer clock cycle multiplied by Now_captured value
+		//Freq = Now_captured * 0.000128;            
+		//Zero the timer 
+		TCNT1 = 0;	
 	}
-	
-	ISR(TIM1_OVF_vect)
+//initialize Universal Serial Interface periferial as One way USART 
+	void USI_init (void)
 	{
-		// add one to overflow variable 
+	
+	}
+//Serial Port shifts value of Frequency 
+	void USI_routine (void)
+	{
+	
 	}
 	
-	sei(); // Enable global interrupts
+//ISR(TIM1_OVF_vect)
+//{
+//	// add one to overflow variable 
+//}
 
+// Enable global interrupts	
+sei(); 
+
+	/* MAIN FUNCTION */
+				
 int main(void)
 {
-	last_captured = 0;
+	TIMER0_ini();
 	TIMER1_ini();
 	
     while(1)
     {
+		PWM_out = Now_captured/30;
+		
+		
 		//TODO:	First Action is to read frequency and convert it to PWM value 
 		//      Frequency changes in discrete values of 15 Hz in range 0-1500 Hz
 		//      Converting to Mini Mill range of RPM 50 - 2500 - each step equals to 24.5 RPM change using  8 bit TIMER.
